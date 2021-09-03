@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from model import UNet
+from model_SASA import UNet
 from dataset import *
 from util import *
 
@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(description="Train the UNet",
 
 parser.add_argument("--lr", default=1e-3, type=float, dest="lr")
 parser.add_argument("--batch_size", default=1, type=int, dest="batch_size")
-parser.add_argument("--num_epoch", default=50, type=int, dest="num_epoch")
+parser.add_argument("--num_epoch", default=300, type=int, dest="num_epoch")
 
 parser.add_argument("--data_dir", default="./datasets", type=str, dest="data_dir")
 parser.add_argument("--ckpt_dir", default="./checkpoint", type=str, dest="ckpt_dir")
@@ -65,12 +65,12 @@ if not os.path.exists(result_dir):
 
 ## 네트워크 학습하기
 if mode == 'train':
-    transform = transforms.Compose([Normalization(mean=0.5, std=0.5), ToTensor()])
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(0.5, 0.5)])
 
-    dataset_train = Dataset(data_dir=os.path.join(data_dir, 'train'), transform=transform)
-    loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=False, num_workers=8)
+    dataset_train = Dataset(dir_data=os.path.join(data_dir, 'train'), transform=transform)
+    loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=8)
 
-    dataset_val = Dataset(data_dir=os.path.join(data_dir, 'val'), transform=transform)
+    dataset_val = Dataset(dir_data=os.path.join(data_dir, 'val'), transform=transform)
     loader_val = DataLoader(dataset_val, batch_size=batch_size, shuffle=False, num_workers=8)
 
     # 그밖에 부수적인 variables 설정하기
@@ -80,9 +80,9 @@ if mode == 'train':
     num_batch_train = np.ceil(num_data_train / batch_size)
     num_batch_val = np.ceil(num_data_val / batch_size)
 else:
-    transform = transforms.Compose([Normalization(mean=0.5, std=0.5), ToTensor()])
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(0.5, 0.5)])
 
-    dataset_test = Dataset(data_dir=os.path.join(data_dir, 'test'), transform=transform)
+    dataset_test = Dataset(dir_data=os.path.join(data_dir, 'test'), transform=transform)
     loader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False, num_workers=8)
 
     # 그밖에 부수적인 variables 설정하기
