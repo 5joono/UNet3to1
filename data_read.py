@@ -27,7 +27,7 @@ if not os.path.exists(dir_save_val):
 if not os.path.exists(dir_save_test):
     os.makedirs(dir_save_test)
 
-for index in np.arange(len_train):
+for index in np.arange(len_input):
     name_input = f'volume-{index}.nii'
     name_label = f'segmentation-{index}.nii'
     img_input = ni.load(os.path.join(dir_input, name_input)).get_fdata()
@@ -42,3 +42,4 @@ for index in np.arange(len_train):
     for slice in np.arange(img_input.shape[-1]):
         np.save(os.path.join(dir_save, f'input_{index:03d}_{slice:04d}.npy'), img_input[:,:,slice])
         np.save(os.path.join(dir_save, f'label_{index:03d}_{slice:04d}.npy'), img_label[:,:,slice])
+    print(f'sample {index} saved in {dir_save}')    
