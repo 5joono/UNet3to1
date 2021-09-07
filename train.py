@@ -22,9 +22,9 @@ parser = argparse.ArgumentParser(description="Train the UNet",
 
 parser.add_argument("--lr", default=1e-3, type=float, dest="lr")
 parser.add_argument("--batch_size", default=1, type=int, dest="batch_size")
-parser.add_argument("--num_epoch", default=300, type=int, dest="num_epoch")
+parser.add_argument("--num_epoch", default=100, type=int, dest="num_epoch")
 
-parser.add_argument("--data_dir", default="./datasets", type=str, dest="data_dir")
+parser.add_argument("--data_dir", default="./dataset", type=str, dest="data_dir")
 parser.add_argument("--ckpt_dir", default="./checkpoint", type=str, dest="ckpt_dir")
 parser.add_argument("--log_dir", default="./log", type=str, dest="log_dir")
 parser.add_argument("--result_dir", default="./result", type=str, dest="result_dir")
@@ -65,7 +65,7 @@ if not os.path.exists(result_dir):
 
 ## 네트워크 학습하기
 if mode == 'train':
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(0.5, 0.5)])
+    transform = transforms.Compose([Normalization(mean=0.5, std=0.5),ToTensor()])
 
     dataset_train = Dataset(dir_data=os.path.join(data_dir, 'train'), transform=transform)
     loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=8)
@@ -138,7 +138,7 @@ if mode == 'train':
             # 손실함수 계산
             loss_arr += [loss.item()]
 
-            print("TRAIN: EPOCH %04d / %04d | BATCH %04d / %04d | LOSS %.4f" %
+            print("TRAIN: EPOCH %05d / %05d | BATCH %05d / %05d | LOSS %.4f" %
                   (epoch, num_epoch, batch, num_batch_train, np.mean(loss_arr)))
 
             # Tensorboard 저장하기
@@ -168,7 +168,7 @@ if mode == 'train':
 
                 loss_arr += [loss.item()]
 
-                print("VALID: EPOCH %04d / %04d | BATCH %04d / %04d | LOSS %.4f" %
+                print("VALID: EPOCH %05d / %05d | BATCH %05d / %05d | LOSS %.4f" %
                       (epoch, num_epoch, batch, num_batch_val, np.mean(loss_arr)))
 
                 # Tensorboard 저장하기
@@ -208,7 +208,7 @@ else:
 
             loss_arr += [loss.item()]
 
-            print("TEST: BATCH %04d / %04d | LOSS %.4f" %
+            print("TEST: BATCH %05d / %05d | LOSS %.4f" %
                   (batch, num_batch_test, np.mean(loss_arr)))
 
             # Tensorboard 저장하기
@@ -219,14 +219,14 @@ else:
             for j in range(label.shape[0]):
                 id = num_batch_test * (batch - 1) + j
 
-                plt.imsave(os.path.join(result_dir, 'png', 'label_%04d.png' % id), label[j].squeeze(), cmap='gray')
-                plt.imsave(os.path.join(result_dir, 'png', 'input_%04d.png' % id), input[j].squeeze(), cmap='gray')
-                plt.imsave(os.path.join(result_dir, 'png', 'output_%04d.png' % id), output[j].squeeze(), cmap='gray')
+                plt.imsave(os.path.join(result_dir, 'png', 'label_%05d.png' % id), label[j].squeeze(), cmap='gray')
+                plt.imsave(os.path.join(result_dir, 'png', 'input_%05d.png' % id), input[j].squeeze(), cmap='gray')
+                plt.imsave(os.path.join(result_dir, 'png', 'output_%05d.png' % id), output[j].squeeze(), cmap='gray')
 
-                np.save(os.path.join(result_dir, 'numpy', 'label_%04d.npy' % id), label[j].squeeze())
-                np.save(os.path.join(result_dir, 'numpy', 'input_%04d.npy' % id), input[j].squeeze())
-                np.save(os.path.join(result_dir, 'numpy', 'output_%04d.npy' % id), output[j].squeeze())
+                np.save(os.path.join(result_dir, 'numpy', 'label_%05d.npy' % id), label[j].squeeze())
+                np.save(os.path.join(result_dir, 'numpy', 'input_%05d.npy' % id), input[j].squeeze())
+                np.save(os.path.join(result_dir, 'numpy', 'output_%05d.npy' % id), output[j].squeeze())
 
-    print("AVERAGE TEST: BATCH %04d / %04d | LOSS %.4f" %
+    print("AVERAGE TEST: BATCH %05d / %05d | LOSS %.4f" %
           (batch, num_batch_test, np.mean(loss_arr)))
 

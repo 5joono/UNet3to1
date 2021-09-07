@@ -59,16 +59,16 @@ class SASA(nn.Module):
         
         padded_kvmap1 = F.pad(kvmap1, [self.kernel_size // 2, (self.kernel_size-1) // 2,self.kernel_size // 2, (self.kernel_size-1) // 2])
         padded_kvmap2 = F.pad(kvmap2, [self.kernel_size // 2, (self.kernel_size-1) // 2,self.kernel_size // 2, (self.kernel_size-1) // 2])
-        padded_kvmap = torch.cat(padded_kvmap1.unsqueeze(-1), padded_kvmap2.unsqueeze(-1),dim=-1)
+        padded_kvmap = torch.cat((padded_kvmap1.unsqueeze(-1), padded_kvmap2.unsqueeze(-1)),dim=-1)
         q = self.to_q(qmap) # b nd h w
         k = self.to_kv(padded_kvmap) # b nd h w 2
         v = self.to_kv(padded_kvmap) # b nd h w 2
-        k_kernel = k.unfold(2, self.kernel_size, 1).unfold(3, self.kernel_size, 1) # b nd h w 2 k k
-        v_kernel = v.unfold(2, self.kernel_size, 1).unfold(3, self.kernel_size, 1) # b nd h w 2 k k
+        k = k.unfold(2, self.kernel_size, 1).unfold(3, self.kernel_size, 1) # b nd h w 2 k k
+        v = v.unfold(2, self.kernel_size, 1).unfold(3, self.kernel_size, 1) # b nd h w 2 k k
 
         q = rearrange(q, 'b (n d) h w -> b n (h w) d', n=heads)
-        k_kernel = rearrange(k, 'b (n d) h w l k1 k2 -> b n (h w) (l k1 k2) d', n=heads)
-        v_kernel = rearrange(v, 'b (n d) h w l k1 k2 -> b n (h w) (l k1 k2) d', n=heads)
+        k = rearrange(k, 'b (n d) h w l k1 k2 -> b n (h w) (l k1 k2) d', n=heads)
+        v = rearrange(v, 'b (n d) h w l k1 k2 -> b n (h w) (l k1 k2) d', n=heads)
 
         q *= self.scale
         logits = einsum('b n x d, b n x y d -> b n x y', q, k)

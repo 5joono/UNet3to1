@@ -1,4 +1,6 @@
 dataset/
+checkpoint/
 result/
+log/
 __pycache__/
 __trash.py
