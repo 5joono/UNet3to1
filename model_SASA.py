@@ -1,45 +1,15 @@
 import os
 import numpy as np
-
+import json
 import torch
-import torch.nn as nn
-
 from torch import einsum, nn, optim
 import torch.nn.functional as F
 import torch.nn.init as init
 import torchvision
 import torchvision.transforms as transforms
-
-from torchsummary import summary
-
 import matplotlib.pyplot as plt
-import numpy as np
-
 from einops import rearrange
-
-import json
-import os
-import os
-import numpy as np
-
-import torch
-import torch.nn as nn
-
-from torch import einsum, nn, optim
-import torch.nn.functional as F
-
-import torchvision
-import torchvision.transforms as transforms
-
-from torchsummary import summary
-
-import matplotlib.pyplot as plt
-import numpy as np
-
-from einops import rearrange
-
-import json
-import os
+import time
       
 class SASA(nn.Module):
     def __init__(self, in_channels, kernel_size, heads=1, dim_head=128, rel_pos_emb=False):
@@ -56,7 +26,6 @@ class SASA(nn.Module):
     def forward(self, kvmap1, qmap, kvmap2):
         heads = self.heads
         b, c, h, w = qmap.shape
-        
         padded_kvmap1 = F.pad(kvmap1, [self.kernel_size // 2, (self.kernel_size-1) // 2,self.kernel_size // 2, (self.kernel_size-1) // 2])
         padded_kvmap2 = F.pad(kvmap2, [self.kernel_size // 2, (self.kernel_size-1) // 2,self.kernel_size // 2, (self.kernel_size-1) // 2])
         padded_kvmap = torch.cat((padded_kvmap1.unsqueeze(-1), padded_kvmap2.unsqueeze(-1)),dim=-1)
@@ -65,7 +34,6 @@ class SASA(nn.Module):
         v = self.to_kv(padded_kvmap) # b nd h w 2
         k = k.unfold(2, self.kernel_size, 1).unfold(3, self.kernel_size, 1) # b nd h w 2 k k
         v = v.unfold(2, self.kernel_size, 1).unfold(3, self.kernel_size, 1) # b nd h w 2 k k
-
         q = rearrange(q, 'b (n d) h w -> b n (h w) d', n=heads)
         k = rearrange(k, 'b (n d) h w l k1 k2 -> b n (h w) (l k1 k2) d', n=heads)
         v = rearrange(v, 'b (n d) h w l k1 k2 -> b n (h w) (l k1 k2) d', n=heads)
