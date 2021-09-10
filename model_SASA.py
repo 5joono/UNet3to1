@@ -20,7 +20,7 @@ class SASA(nn.Module):
         self.kernel_size = kernel_size
 
         self.to_q = nn.Conv2d(in_channels, out_channels, 1, bias=False)
-        self.to_kv = nn.Conv3d(in_channels, out_channels, 1, bias=False)
+        self.to_kv = nn.Conv2d(in_channels, out_channels, 1, bias=False)
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, kvmap1, qmap, kvmap2):
@@ -28,22 +28,33 @@ class SASA(nn.Module):
         b, c, h, w = qmap.shape
         padded_kvmap1 = F.pad(kvmap1, [self.kernel_size // 2, (self.kernel_size-1) // 2,self.kernel_size // 2, (self.kernel_size-1) // 2])
         padded_kvmap2 = F.pad(kvmap2, [self.kernel_size // 2, (self.kernel_size-1) // 2,self.kernel_size // 2, (self.kernel_size-1) // 2])
-        padded_kvmap = torch.cat((padded_kvmap1.unsqueeze(-1), padded_kvmap2.unsqueeze(-1)),dim=-1)
         q = self.to_q(qmap) # b nd h w
-        k = self.to_kv(padded_kvmap) # b nd h w 2
-        v = self.to_kv(padded_kvmap) # b nd h w 2
-        k = k.unfold(2, self.kernel_size, 1).unfold(3, self.kernel_size, 1) # b nd h w 2 k k
-        v = v.unfold(2, self.kernel_size, 1).unfold(3, self.kernel_size, 1) # b nd h w 2 k k
         q = rearrange(q, 'b (n d) h w -> b n (h w) d', n=heads)
-        k = rearrange(k, 'b (n d) h w l k1 k2 -> b n (h w) (l k1 k2) d', n=heads)
-        v = rearrange(v, 'b (n d) h w l k1 k2 -> b n (h w) (l k1 k2) d', n=heads)
-
         q *= self.scale
-        logits = einsum('b n x d, b n x y d -> b n x y', q, k)
+         
+        k1 = self.to_kv(padded_kvmap1) # b nd h w 
+        v1 = self.to_kv(padded_kvmap1) # b nd h w 
+        k1 = k1.unfold(2, self.kernel_size, 1).unfold(3, self.kernel_size, 1) # b nd h w k k
+        v1 = v1.unfold(2, self.kernel_size, 1).unfold(3, self.kernel_size, 1) # b nd h w k k
+        k1 = rearrange(k1, 'b (n d) h w k1 k2 -> b n (h w) (k1 k2) d', n=heads)
+        v1 = rearrange(v1, 'b (n d) h w k1 k2 -> b n (h w) (k1 k2) d', n=heads)
+        logits1 = einsum('b n x d, b n x y d -> b n x y', q, k1)
+        weights1 = self.softmax(logits1)
+        attn_out1 = einsum('b n x y, b n x y d -> b n x d', weights1, v1)
+        attn_out1 = rearrange(attn_out1, 'b n (h w) d -> b (n d) h w', h=h)
 
-        weights = self.softmax(logits)
-        attn_out = einsum('b n x y, b n x y d -> b n x d', weights, v)
-        attn_out = rearrange(attn_out, 'b n (h w) d -> b (n d) h w', h=h)
+        del k1, v1, logits1, weights1
+        k2 = self.to_kv(padded_kvmap2) # b nd h w 
+        v2 = self.to_kv(padded_kvmap2) # b nd h w 
+        k2 = k2.unfold(2, self.kernel_size, 1).unfold(3, self.kernel_size, 1) # b nd h w k k
+        v2 = v2.unfold(2, self.kernel_size, 1).unfold(3, self.kernel_size, 1) # b nd h w k k
+        k2 = rearrange(k2, 'b (n d) h w k1 k2 -> b n (h w) (k1 k2) d', n=heads)
+        v2 = rearrange(v2, 'b (n d) h w k1 k2 -> b n (h w) (k1 k2) d', n=heads)
+        logits2 = einsum('b n x d, b n x y d -> b n x y', q, k2)
+        weights2 = self.softmax(logits2)
+        attn_out2 = einsum('b n x y, b n x y d -> b n x d', weights2, v2)
+        attn_out2 = rearrange(attn_out2, 'b n (h w) d -> b (n d) h w', h=h)
+        attn_out = (attn_out1 + attn_out2) / 2
 
         return attn_out
      
