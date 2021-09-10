@@ -94,7 +94,7 @@ else:
 net = UNet().to(device)
 
 ## 손실함수 정의하기
-fn_loss = nn.BCEWithLogitsLoss().to(device)
+fn_loss = nn.CrossEntropyLoss().to(device)
 
 ## Optimizer 설정하기
 optim = torch.optim.Adam(net.parameters(), lr=lr)
