@@ -15,8 +15,8 @@ class Dataset(torch.utils.data.Dataset):
         lst_label = [f for f in lst_data if f.startswith('label')]
         lst_input = [f for f in lst_data if f.startswith('input')]
 
-        #lst_label.sort()
-        #lst_input.sort()
+        lst_label.sort()
+        lst_input.sort()
 
         self.lst_label = lst_label
         self.lst_input = lst_input
@@ -46,7 +46,7 @@ class Dataset(torch.utils.data.Dataset):
 
         if self.transform:
             data = self.transform(data)
-
+            
         return data
 
 class ToTensor(object):

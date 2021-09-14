@@ -59,8 +59,8 @@ class SASA(nn.Module):
         return attn_out
      
 class UNet(nn.Module):
-    def __init__(self):
-        super(UNet, self).__init__()
+    def __init__(self, k):
+        super().__init__()
 
         def CBR2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True):
             layers = []
@@ -73,8 +73,6 @@ class UNet(nn.Module):
             cbr = nn.Sequential(*layers)
 
             return cbr
-
-        k = 64
 
         self.enc1_1 = CBR2d(in_channels=1, out_channels=k)
         self.enc1_2 = CBR2d(in_channels=k, out_channels=k)

@@ -1,26 +1,22 @@
 import argparse
-
 import os
 import numpy as np
-
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-
 from model_SASA import UNet
 from dataset import *
 from util import *
-
 import matplotlib.pyplot as plt
-
 from torchvision import transforms, datasets
-
+import time
 ##
 parser = argparse.ArgumentParser(description="Train the UNet",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("--lr", default=1e-3, type=float, dest="lr")
+parser.add_argument("--channel", default=64, type=int, dest="channel")
 parser.add_argument("--batch_size", default=1, type=int, dest="batch_size")
 parser.add_argument("--num_epoch", default=100, type=int, dest="num_epoch")
 
@@ -36,6 +32,7 @@ args = parser.parse_args()
 
 ## 트레이닝 파라메터 설정하기
 lr = args.lr
+channel = args.channel
 batch_size = args.batch_size
 num_epoch = args.num_epoch
 
@@ -50,6 +47,7 @@ train_continue = args.train_continue
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 print("learning rate: %.4e" % lr)
+print("channel: %d" % channel)
 print("batch size: %d" % batch_size)
 print("number of epoch: %d" % num_epoch)
 print("data dir: %s" % data_dir)
@@ -91,10 +89,10 @@ else:
     num_batch_test = np.ceil(num_data_test / batch_size)
 
 ## 네트워크 생성하기
-net = UNet().to(device)
+net = UNet(channel).to(device)
 
 ## 손실함수 정의하기
-fn_loss = nn.CrossEntropyLoss().to(device)
+fn_loss = nn.BCEWithLogitsLoss().to(device)
 
 ## Optimizer 설정하기
 optim = torch.optim.Adam(net.parameters(), lr=lr)
@@ -124,12 +122,11 @@ if mode == 'train':
             # forward pass
             label = data['label'].to(device)
             input = data['input'].to(device)
-
             output = net(input)
 
             # backward pass
             optim.zero_grad()
-
+            
             loss = fn_loss(output, label)
             loss.backward()
 
