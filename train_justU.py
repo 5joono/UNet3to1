@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(description="Train the UNet",
 
 parser.add_argument("--lr", default=1e-3, type=float, dest="lr")
 parser.add_argument("--channel", default=64, type=int, dest="channel")
-parser.add_argument("--batch_size", default=4, type=int, dest="batch_size")
+parser.add_argument("--batch_size", default=1, type=int, dest="batch_size")
 parser.add_argument("--num_epoch", default=100, type=int, dest="num_epoch")
 
 parser.add_argument("--data_dir", default="./dataset", type=str, dest="data_dir")
@@ -119,6 +119,7 @@ if mode == 'train':
         loss_arr = []
 
         for batch, data in enumerate(loader_train, 1):
+            t1 = time.time()
             # forward pass
             label = data['label'].to(device)
             input = data['input'].to(device)
@@ -139,14 +140,14 @@ if mode == 'train':
                   (epoch, num_epoch, batch, num_batch_train, np.mean(loss_arr)))
 
             # Tensorboard 저장하기
-            label = fn_tonumpy(label)
+            ''' label = fn_tonumpy(label)
             input = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
             output = fn_tonumpy(fn_class(output))
 
             writer_train.add_image('label', label, num_batch_train * (epoch - 1) + batch, dataformats='NHWC')
             writer_train.add_image('input', input, num_batch_train * (epoch - 1) + batch, dataformats='NHWC')
-            writer_train.add_image('output', output, num_batch_train * (epoch - 1) + batch, dataformats='NHWC')
-
+            writer_train.add_image('output', output, num_batch_train * (epoch - 1) + batch, dataformats='NHWC') '''
+            t2 = time.time();print("%04f sec" % (t2-t1))
         writer_train.add_scalar('loss', np.mean(loss_arr), epoch)
 
         with torch.no_grad():
@@ -169,13 +170,13 @@ if mode == 'train':
                       (epoch, num_epoch, batch, num_batch_val, np.mean(loss_arr)))
 
                 # Tensorboard 저장하기
-                label = fn_tonumpy(label)
+                ''' label = fn_tonumpy(label)
                 input = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
                 output = fn_tonumpy(fn_class(output))
 
                 writer_val.add_image('label', label, num_batch_val * (epoch - 1) + batch, dataformats='NHWC')
                 writer_val.add_image('input', input, num_batch_val * (epoch - 1) + batch, dataformats='NHWC')
-                writer_val.add_image('output', output, num_batch_val * (epoch - 1) + batch, dataformats='NHWC')
+                writer_val.add_image('output', output, num_batch_val * (epoch - 1) + batch, dataformats='NHWC') '''
 
         writer_val.add_scalar('loss', np.mean(loss_arr), epoch)
 
