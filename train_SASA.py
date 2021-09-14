@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from model_SASA import UNet
-from dataset import *
+from dataset_SASA import *
 from util import *
 import matplotlib.pyplot as plt
 from torchvision import transforms, datasets

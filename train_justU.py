@@ -10,6 +10,7 @@ from dataset_justU import *
 from util import *
 import matplotlib.pyplot as plt
 from torchvision import transforms, datasets
+import time
 ##
 parser = argparse.ArgumentParser(description="Train the UNet",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
