@@ -11,7 +11,8 @@ from util import *
 import matplotlib.pyplot as plt
 from torchvision import transforms, datasets
 import time
-##
+
+t1 = time.time()
 parser = argparse.ArgumentParser(description="Train the UNet",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -119,7 +120,7 @@ if mode == 'train':
         loss_arr = []
 
         for batch, data in enumerate(loader_train, 1):
-            t1 = time.time()
+    
             # forward pass
             label = data['label'].to(device)
             input = data['input'].to(device)
@@ -148,7 +149,7 @@ if mode == 'train':
             writer_train.add_image('input', input, num_batch_train * (epoch - 1) + batch, dataformats='NHWC')
             writer_train.add_image('output', output, num_batch_train * (epoch - 1) + batch, dataformats='NHWC')
             '''
-            t2 = time.time();print("%04f sec" % (t2-t1))
+            t2 = time.time();print("%04f sec" % (t2-t1));t1=t2;
 
         writer_train.add_scalar('loss', np.mean(loss_arr), epoch)
 
