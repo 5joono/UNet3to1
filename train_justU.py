@@ -78,7 +78,7 @@ if mode == 'train':
     num_batch_train = np.ceil(num_data_train / batch_size)
     num_batch_val = np.ceil(num_data_val / batch_size)
 else:
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(0.5, 0.5)])
+    transform = transforms.Compose([Normalization(mean=0.5, std=0.5),ToTensor()])
 
     dataset_test = Dataset(dir_data=os.path.join(data_dir, 'test'), transform=transform)
     loader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False, num_workers=8)
