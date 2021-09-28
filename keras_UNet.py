@@ -2,14 +2,13 @@ import numpy as np
 from scipy import io
 import h5py
 import tensorflow as tf
-import keras
+from tensorflow import keras
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Model, load_model, model_from_json
 from keras.layers import Input, Lambda, BatchNormalization, Activation, Conv2D, add, MaxPooling2D, UpSampling2D, concatenate
 from keras.applications.vgg16 import VGG16
 
 from keras import backend as K
-from keras.engine.topology import Layer
 from keras import losses
 
 def ResNet24(k):
@@ -254,7 +253,7 @@ def UNet24_ver2(k):
     x = Activation('relu')(x)
     x = Conv2D(1, (1,1), padding='same', name = 'conv9_3')(x)
 
-    x = add([x,x_in], name = 'output') # Residual Learning
+    #x = add([x,x_in], name = 'output') # Residual Learning
     model = Model(inputs=x_in, outputs=x)
 
     return model
@@ -267,15 +266,17 @@ fine_tuning = False
 
 learning_rate = 0.0001
 
-model_name = 'UNet_CBCT_ver1'
+''' model_name = 'UNet_CBCT_ver1'
 save_model_address = 'D:/MODELS/CTmeeting2018_talk/model_'+model_name+'.h5'
 save_history_address = 'D:/MODELS/CTmeeting2018_talk/model_'+model_name
 
 load_model_name = 'UNet_ver10_2'
-load_model_address = 'D:/MODELS/CTmeeting2018_talk/model_'+load_model_name+'.h5'
-
-
-
+load_model_address = 'D:/MODELS/CTmeeting2018_talk/model_'+load_model_name+'.h5' '''
+model_name = 'keras_UNet'
+save_model_address = './keras_model/'+ model_name + '.h5'
+save_history_address = './keras_model/' + model_name
+load_model_name = model_name
+load_model_address = save_model_address
 
 opt = keras.optimizers.Adam(lr=learning_rate)
 
@@ -297,8 +298,7 @@ else:
     model.summary()
 
 
-
-matf = io.loadmat('D:/DATASET/result.mat')
+''' matf = io.loadmat('D:/DATASET/result.mat')
 X_temp = matf['Origin']
 X = X_temp[:,:,0:2400].T
 X_val = X_temp[:,:,2400:3000].T
@@ -307,6 +307,8 @@ Y_temp = matf['Cone']
 Y = Y_temp[:,:,0:2400].T
 Y_val = Y_temp[:,:,2400:3000].T
 
+
+
 num_img = Y.shape[0]
 num_val_img = Y_val.shape[0]
 
@@ -314,9 +316,19 @@ X = X.reshape(num_img,256,256,-1)
 Y = Y.reshape(num_img,256,256,-1)
 
 X_val = X_val.reshape(num_val_img,256,256,-1)
-Y_val = Y_val.reshape(num_val_img,256,256,-1)
+Y_val = Y_val.reshape(num_val_img,256,256,-1) '''
 
+import nibabel as ni
 
+X = ni.load('/home/joono/Desktop/data_LITS/volume/volume-0.nii').get_fdata()
+X_val = ni.load('/home/joono/Desktop/data_LITS/volume/volume-1.nii').get_fdata()
+Y = ni.load('/home/joono/Desktop/data_LITS/segmentation/segmentation-0.nii').get_fdata()
+Y_val = ni.load('/home/joono/Desktop/data_LITS/segmentation/segmentation-1.nii').get_fdata()
+
+X = X.transpose((2,0,1)); X = X[:,:,:,np.newaxis]
+Y = Y.transpose((2,0,1)); Y = Y[:,:,:,np.newaxis]
+X_val = X_val.transpose((2,0,1)); X_val = X_val[:,:,:,np.newaxis]
+Y_val = Y_val.transpose((2,0,1)); Y_val = Y_val[:,:,:,np.newaxis]
 import math
 from keras.callbacks import LearningRateScheduler, Callback, TensorBoard
 
@@ -340,7 +352,7 @@ class BatchLossHistory(Callback):
 
 batch_history = BatchLossHistory()
 
-tb_hist = TensorBoard(log_dir='D:/log', histogram_freq=0, write_graph=True, write_images=True)
+tb_hist = TensorBoard(log_dir='./log', histogram_freq=0, write_graph=True, write_images=True)
 
 check_point = keras.callbacks.ModelCheckpoint(save_model_address, monitor='loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', period=1)
 
@@ -425,11 +437,11 @@ io.savemat(save_history_address, mdict={
 # Check model:
 model.summary()
 
-output_4d = model.predict(Y_val, batch_size=4)
+output_4d = model.predict(Y_val, batch_size=1)
 # model.evaluate(Y_val, batch_size=1)
 
 ### File address of which the results will be saved, e.g.,
-results_address = 'D:/MODELS/CBCT/'+model_name+'_output.mat'
+#results_address = './keras_UNet/'+model_name+'_output.mat'
 
 ### Save the results
-io.savemat(results_address, mdict={'output': output_4d[:,:,:,0].T,'input': Y_val[:,:,:,0].T,'ref': X_val[:,:,:,0].T})
+#io.savemat(results_address, mdict={'output': output_4d[:,:,:,0].T,'input': Y_val[:,:,:,0].T,'ref': X_val[:,:,:,0].T})
