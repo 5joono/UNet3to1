@@ -101,7 +101,7 @@ optim = torch.optim.Adam(net.parameters(), lr=lr)
 ## 그밖에 부수적인 functions 설정하기
 fn_tonumpy = lambda x: x.to('cpu').detach().numpy().transpose(0, 2, 3, 1)
 fn_denorm = lambda x, mean, std: (x * std) + mean
-fn_class = lambda x: 1.0 * (x > 0.5)
+fn_class = lambda x: torch.argmax(x, dim=1)
 
 ## Tensorboard 를 사용하기 위한 SummaryWriter 설정
 writer_train = SummaryWriter(log_dir=os.path.join(log_dir, 'train'))
