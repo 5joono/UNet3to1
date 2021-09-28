@@ -122,9 +122,11 @@ if mode == 'train':
         for batch, data in enumerate(loader_train, 1):
     
             # forward pass
-            label = data['label'].to(device)
+            label = data['label'].to(device).squeeze(dim=1)
             input = data['input'].to(device)
-            output = net(input)
+            input_prev = data['input_prev'].to(device)
+            input_next = data['input_next'].to(device)
+            output = net(input_prev,input,input_next)
 
             # backward pass
             optim.zero_grad()
@@ -159,10 +161,11 @@ if mode == 'train':
 
             for batch, data in enumerate(loader_val, 1):
                 # forward pass
-                label = data['label'].to(device)
+                label = data['label'].to(device).squeeze(dim=1)
                 input = data['input'].to(device)
-
-                output = net(input)
+                input_prev = data['input_prev'].to(device)
+                input_next = data['input_next'].to(device)
+                output = net(input_prev,input,input_next)
 
                 # 손실함수 계산하기
                 loss = fn_loss(output, label)
@@ -199,10 +202,11 @@ else:
 
         for batch, data in enumerate(loader_test, 1):
             # forward pass
-            label = data['label'].to(device)
+            label = data['label'].to(device).squeeze(dim=1)
             input = data['input'].to(device)
-
-            output = net(input)
+            input_prev = data['input_prev'].to(device)
+            input_next = data['input_next'].to(device)
+            output = net(input_prev,input,input_next)
 
             # 손실함수 계산하기
             loss = fn_loss(output, label)

@@ -121,7 +121,7 @@ if mode == 'train':
         for batch, data in enumerate(loader_train, 1):
             t1 = time.time()
             # forward pass
-            label = data['label'].to(device)
+            label = data['label'].to(device).squeeze(dim=1)
             input = data['input'].to(device)
             output = net(input)
 
@@ -156,7 +156,7 @@ if mode == 'train':
 
             for batch, data in enumerate(loader_val, 1):
                 # forward pass
-                label = data['label'].to(device)
+                label = data['label'].to(device).squeeze(dim=1)
                 input = data['input'].to(device)
 
                 output = net(input)
@@ -196,7 +196,7 @@ else:
 
         for batch, data in enumerate(loader_test, 1):
             # forward pass
-            label = data['label'].to(device)
+            label = data['label'].to(device).squeeze(dim=1)
             input = data['input'].to(device)
 
             output = net(input)

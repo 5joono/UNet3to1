@@ -34,15 +34,17 @@ class Dataset(torch.utils.data.Dataset):
             index_next = index   
 
         label = np.load(os.path.join(self.dir_data, self.lst_label[index]))        
-        input1 = np.load(os.path.join(self.dir_data, self.lst_input[index_prev]))
-        input2 = np.load(os.path.join(self.dir_data, self.lst_input[index]))
-        input3 = np.load(os.path.join(self.dir_data, self.lst_input[index_next]))
-        input = np.concatenate((input1, input2, input3), axis=-1)
+        input_prev = np.load(os.path.join(self.dir_data, self.lst_input[index_prev]))
+        input = np.load(os.path.join(self.dir_data, self.lst_input[index]))
+        input_next = np.load(os.path.join(self.dir_data, self.lst_input[index_next]))
 
         label = label[:,:,np.newaxis]
+        input_prev = input_prev[:,:,np.newaxis]
         input = input[:,:,np.newaxis]
+        input_next = input_next[:,:,np.newaxis]
+     
 
-        data = {'input': input, 'label': label}
+        data = {'input': input, 'label': label, 'input_prev': input_prev, 'input_next': input_next}
 
         if self.transform:
             data = self.transform(data)
@@ -51,12 +53,13 @@ class Dataset(torch.utils.data.Dataset):
 
 class ToTensor(object):
     def __call__(self, data):
-        label, input = data['label'], data['input']
+        label, input, input_prev, input_next = data['label'], data['input'], data['input_prev'], data['input_next']
 
         label = label.transpose((2, 0, 1)).astype(np.int64)
         input = input.transpose((2, 0, 1)).astype(np.float32)
-
-        data = {'label': torch.from_numpy(label), 'input': torch.from_numpy(input)}
+        input_prev = input_prev.transpose((2, 0, 1)).astype(np.float32)
+        input_next = input_next.transpose((2, 0, 1)).astype(np.float32)
+        data = {'label': torch.from_numpy(label), 'input': torch.from_numpy(input), 'input_prev': torch.from_numpy(input_prev), 'input_next': torch.from_numpy(input_next)}
 
         return data
 
@@ -66,10 +69,12 @@ class Normalization(object):
         self.std = std
 
     def __call__(self, data):
-        label, input = data['label'], data['input']
+        label, input, input_prev, input_next = data['label'], data['input'], data['input_prev'], data['input_next']
 
         input = (input - self.mean) / self.std
+        input_prev = (input_prev - self.mean) / self.std
+        input_next = (input_next - self.mean) / self.std
 
-        data = {'label': label, 'input': input}
+        data = {'label': label, 'input': input, 'input_prev': input_prev, 'input_next': input_next}
 
         return data
