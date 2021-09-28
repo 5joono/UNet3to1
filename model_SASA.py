@@ -123,7 +123,7 @@ class UNet(nn.Module):
         self.dec1_2 = CBR2d(in_channels=2 * k, out_channels=k)
         self.dec1_1 = CBR2d(in_channels=k, out_channels=k)
 
-        self.fc = nn.Conv2d(in_channels=k, out_channels=1, kernel_size=1, stride=1, padding=0, bias=True)
+        self.fc = nn.Conv2d(in_channels=k, out_channels=3, kernel_size=1, stride=1, padding=0, bias=True)
 
     def forward(self, x):
         a, b, c = torch.chunk(x, 3, -1)

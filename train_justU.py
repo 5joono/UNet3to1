@@ -18,12 +18,12 @@ parser = argparse.ArgumentParser(description="Train the UNet",
 parser.add_argument("--lr", default=1e-3, type=float, dest="lr")
 parser.add_argument("--channel", default=64, type=int, dest="channel")
 parser.add_argument("--batch_size", default=1, type=int, dest="batch_size")
-parser.add_argument("--num_epoch", default=100, type=int, dest="num_epoch")
+parser.add_argument("--num_epoch", default=30, type=int, dest="num_epoch")
 
-parser.add_argument("--data_dir", default="./dataset", type=str, dest="data_dir")
-parser.add_argument("--ckpt_dir", default="./checkpoint", type=str, dest="ckpt_dir")
-parser.add_argument("--log_dir", default="./log", type=str, dest="log_dir")
-parser.add_argument("--result_dir", default="./result", type=str, dest="result_dir")
+parser.add_argument("--data_dir", default="./dataset_small", type=str, dest="data_dir")
+parser.add_argument("--ckpt_dir", default="./checkpoint_justU", type=str, dest="ckpt_dir")
+parser.add_argument("--log_dir", default="./log_justU", type=str, dest="log_dir")
+parser.add_argument("--result_dir", default="./result_justU", type=str, dest="result_dir")
 
 parser.add_argument("--mode", default="train", type=str, dest="mode")
 parser.add_argument("--train_continue", default="off", type=str, dest="train_continue")
@@ -92,7 +92,7 @@ else:
 net = UNet().to(device)
 
 ## 손실함수 정의하기
-fn_loss = nn.BCEWithLogitsLoss().to(device)
+fn_loss = nn.CrossEntropyLoss().to(device)
 
 ## Optimizer 설정하기
 optim = torch.optim.Adam(net.parameters(), lr=lr)
