@@ -1,7 +1,11 @@
+__pycache__/
+.vscode/
+checkpoint_justU/
+checkpoint_SASA/
 dataset/
 dataset_small/
-checkpoint/
-result/
-log/
-__pycache__/
+log_justU/
+log_SASA/
+result_justU/
+result_SASA/
 __trash.py
