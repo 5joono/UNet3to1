@@ -202,6 +202,7 @@ else:
 
         for batch, data in enumerate(loader_test, 1):
             # forward pass
+            name = data['name'].to(device)
             label = data['label'].to(device).squeeze(dim=1)
             input = data['input'].to(device)
             input_prev = data['input_prev'].to(device)
@@ -217,20 +218,17 @@ else:
                   (batch, num_batch_test, np.mean(loss_arr)))
 
             # Tensorboard 저장하기
-            label = fn_tonumpy(label)
+            label = fn_tonumpy(label.unsqueeze(dim=1))
             input = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
-            output = fn_tonumpy(fn_class(output))
+            output = fn_tonumpy(fn_class(output).unsqueeze(dim=1))
 
-            for j in range(label.shape[0]):
-                id = num_batch_test * (batch - 1) + j
+            plt.imsave(os.path.join(result_dir, 'png', f'label_{name}.png'), label.squeeze(), cmap='gray')
+            plt.imsave(os.path.join(result_dir, 'png', f'input_{name}.png'), input.squeeze(), cmap='gray')
+            plt.imsave(os.path.join(result_dir, 'png', f'output_{name}.png'), output.squeeze(), cmap='gray')
+            np.save(os.path.join(result_dir, 'numpy', f'label_{name}.npy'), label.squeeze())
+            np.save(os.path.join(result_dir, 'numpy', f'input_{name}.npy'), input.squeeze())
+            np.save(os.path.join(result_dir, 'numpy', f'output_{name}.npy'), output.squeeze())
 
-                plt.imsave(os.path.join(result_dir, 'png', 'label_%05d.png' % id), label[j].squeeze(), cmap='gray')
-                plt.imsave(os.path.join(result_dir, 'png', 'input_%05d.png' % id), input[j].squeeze(), cmap='gray')
-                plt.imsave(os.path.join(result_dir, 'png', 'output_%05d.png' % id), output[j].squeeze(), cmap='gray')
-
-                np.save(os.path.join(result_dir, 'numpy', 'label_%05d.npy' % id), label[j].squeeze())
-                np.save(os.path.join(result_dir, 'numpy', 'input_%05d.npy' % id), input[j].squeeze())
-                np.save(os.path.join(result_dir, 'numpy', 'output_%05d.npy' % id), output[j].squeeze())
 
     print("AVERAGE TEST: BATCH %05d / %05d | LOSS %.4f" %
           (batch, num_batch_test, np.mean(loss_arr)))

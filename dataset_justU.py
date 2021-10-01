@@ -28,11 +28,11 @@ class Dataset(torch.utils.data.Dataset):
 
         label = np.load(os.path.join(self.dir_data, self.lst_label[index]))        
         input = np.load(os.path.join(self.dir_data, self.lst_input[index]))
-
+        name = self.lst_input[index][6:14]
         label = label[:,:,np.newaxis]
         input = input[:,:,np.newaxis]
 
-        data = {'input': input, 'label': label}
+        data = {'name': name,'input': input, 'label': label}
 
         if self.transform:
             data = self.transform(data)
@@ -41,12 +41,12 @@ class Dataset(torch.utils.data.Dataset):
 
 class ToTensor(object):
     def __call__(self, data):
-        label, input = data['label'], data['input']
+        name, label, input = data['name'], data['label'], data['input']
 
         label = label.transpose((2, 0, 1)).astype(np.int64)
         input = input.transpose((2, 0, 1)).astype(np.float32)
 
-        data = {'label': torch.from_numpy(label), 'input': torch.from_numpy(input)}
+        data = {'name': name, 'label': torch.from_numpy(label), 'input': torch.from_numpy(input)}
 
         return data
 
@@ -56,10 +56,10 @@ class Normalization(object):
         self.std = std
 
     def __call__(self, data):
-        label, input = data['label'], data['input']
+        name, label, input = data['name'], data['label'], data['input']
 
         input = (input - self.mean) / self.std
 
-        data = {'label': label, 'input': input}
+        data = {'name': name, 'label': label, 'input': input}
 
         return data
