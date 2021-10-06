@@ -69,7 +69,9 @@ class Normalization(object):
 
     def __call__(self, data):
         name, label, input, input_prev, input_next = data['name'], data['label'], data['input'], data['input_prev'], data['input_next']
-
+        input = np.minimum(np.maximum(input,self.min),self.max)
+        input_prev = np.minimum(np.maximum(input_prev,self.min),self.max)
+        input_next = np.minimum(np.maximum(input_next,self.min),self.max)
         input = (input - self.min) / (self.max - self.min)
         input_prev = (input_prev - self.min) / (self.max - self.min)
         input_next = (input_next - self.min) / (self.max - self.min)

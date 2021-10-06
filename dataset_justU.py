@@ -56,7 +56,8 @@ class Normalization(object):
 
     def __call__(self, data):
         name, label, input = data['name'], data['label'], data['input']
-
+        
+        input = np.minimum(np.maximum(input,self.min),self.max)
         input = (input - self.min) / (self.max - self.min)
 
         data = {'name': name, 'label': label, 'input': input}
