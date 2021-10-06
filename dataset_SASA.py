@@ -54,7 +54,7 @@ class ToTensor(object):
     def __call__(self, data):
         name, label, input, input_prev, input_next = data['name'], data['label'], data['input'], data['input_prev'], data['input_next']
 
-        label = label.transpose((2, 0, 1)).astype(np.int64)
+        label = label.astype(np.int64)
         input = input.transpose((2, 0, 1)).astype(np.float32)
         input_prev = input_prev.transpose((2, 0, 1)).astype(np.float32)
         input_next = input_next.transpose((2, 0, 1)).astype(np.float32)

@@ -42,7 +42,7 @@ class ToTensor(object):
     def __call__(self, data):
         name, label, input = data['name'], data['label'], data['input']
 
-        label = label.transpose((2, 0, 1)).astype(np.int64)
+        label = label.transpose.astype(np.int64)
         input = input.transpose((2, 0, 1)).astype(np.float32)
 
         data = {'name': name, 'label': torch.from_numpy(label), 'input': torch.from_numpy(input)}
