@@ -16,12 +16,12 @@ t1 = time.time()
 parser = argparse.ArgumentParser(description="Train the UNet",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument("--lr", default=1e-3, type=float, dest="lr")
+parser.add_argument("--lr", default=3e-4, type=float, dest="lr")
 parser.add_argument("--channel", default=64, type=int, dest="channel")
 parser.add_argument("--batch_size", default=1, type=int, dest="batch_size")
 parser.add_argument("--num_epoch", default=30, type=int, dest="num_epoch")
 
-parser.add_argument("--data_dir", default="./dataset_small", type=str, dest="data_dir")
+parser.add_argument("--data_dir", default="./dataset", type=str, dest="data_dir")
 parser.add_argument("--ckpt_dir", default="./checkpoint_SASA", type=str, dest="ckpt_dir")
 parser.add_argument("--log_dir", default="./log_SASA", type=str, dest="log_dir")
 parser.add_argument("--result_dir", default="./result_SASA", type=str, dest="result_dir")
@@ -64,7 +64,7 @@ if not os.path.exists(result_dir):
 
 ## 네트워크 학습하기
 if mode == 'train':
-    transform = transforms.Compose([Normalization(mean=0.5, std=0.5),ToTensor()])
+    transform = transforms.Compose([Normalization(min = -100, max = 400),ToTensor()])
 
     dataset_train = Dataset(dir_data=os.path.join(data_dir, 'train'), transform=transform)
     loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=8)
@@ -79,7 +79,7 @@ if mode == 'train':
     num_batch_train = np.ceil(num_data_train / batch_size)
     num_batch_val = np.ceil(num_data_val / batch_size)
 else:
-    transform = transforms.Compose([Normalization(mean=0.5, std=0.5),ToTensor()])
+    transform = transforms.Compose([Normalization(min = -100, max = 400),ToTensor()])
 
     dataset_test = Dataset(dir_data=os.path.join(data_dir, 'test'), transform=transform)
     loader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False, num_workers=8)
@@ -93,14 +93,13 @@ else:
 net = UNet(channel).to(device)
 
 ## 손실함수 정의하기
-fn_loss = nn.CrossEntropyLoss().to(device)
+fn_loss = nn.CrossEntropyLoss(weight=torch.tensor([0.78, 0.65, 8.57])).to(device)
 
 ## Optimizer 설정하기
 optim = torch.optim.Adam(net.parameters(), lr=lr)
 
 ## 그밖에 부수적인 functions 설정하기
-fn_tonumpy = lambda x: x.to('cpu').detach().numpy().transpose(0, 2, 3, 1)
-fn_denorm = lambda x, mean, std: (x * std) + mean
+fn_tonumpy = lambda x: x.to('cpu').detach().numpy()
 fn_class = lambda x: torch.argmax(x, dim=1)
 
 ## Tensorboard 를 사용하기 위한 SummaryWriter 설정
@@ -122,7 +121,7 @@ if mode == 'train':
         for batch, data in enumerate(loader_train, 1):
     
             # forward pass
-            label = data['label'].to(device).squeeze(dim=1)
+            label = data['label'].to(device)
             input = data['input'].to(device)
             input_prev = data['input_prev'].to(device)
             input_next = data['input_next'].to(device)
@@ -161,7 +160,7 @@ if mode == 'train':
 
             for batch, data in enumerate(loader_val, 1):
                 # forward pass
-                label = data['label'].to(device).squeeze(dim=1)
+                label = data['label'].to(device)
                 input = data['input'].to(device)
                 input_prev = data['input_prev'].to(device)
                 input_next = data['input_next'].to(device)
@@ -202,8 +201,8 @@ else:
 
         for batch, data in enumerate(loader_test, 1):
             # forward pass
-            name = data['name'].to(device)
-            label = data['label'].to(device).squeeze(dim=1)
+            name = data['name']
+            label = data['label'].to(device)
             input = data['input'].to(device)
             input_prev = data['input_prev'].to(device)
             input_next = data['input_next'].to(device)
@@ -219,16 +218,15 @@ else:
 
             # Tensorboard 저장하기
             label = fn_tonumpy(label.unsqueeze(dim=1))
-            input = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
-            output = fn_tonumpy(fn_class(output).unsqueeze(dim=1))
-
-            plt.imsave(os.path.join(result_dir, 'png', f'label_{name}.png'), label.squeeze(), cmap='gray')
-            plt.imsave(os.path.join(result_dir, 'png', f'input_{name}.png'), input.squeeze(), cmap='gray')
-            plt.imsave(os.path.join(result_dir, 'png', f'output_{name}.png'), output.squeeze(), cmap='gray')
-            np.save(os.path.join(result_dir, 'numpy', f'label_{name}.npy'), label.squeeze())
-            np.save(os.path.join(result_dir, 'numpy', f'input_{name}.npy'), input.squeeze())
-            np.save(os.path.join(result_dir, 'numpy', f'output_{name}.npy'), output.squeeze())
-
+            input = fn_tonumpy(input.squeeze(dim=1))
+            output = fn_tonumpy(fn_class(output))
+            for j in range(label.shape[0]):
+                plt.imsave(os.path.join(result_dir, 'png', f'label_{name[j]}.png'), label, cmap='gray')
+                plt.imsave(os.path.join(result_dir, 'png', f'input_{name[j]}.png'), input, cmap='gray')
+                plt.imsave(os.path.join(result_dir, 'png', f'output_{name[j]}.png'), output, cmap='gray')
+                np.save(os.path.join(result_dir, 'numpy', f'label_{name[j]}.npy'), label)
+                np.save(os.path.join(result_dir, 'numpy', f'input_{name[j]}.npy'), input)
+                np.save(os.path.join(result_dir, 'numpy', f'output_{name[j]}.npy'), output)
 
     print("AVERAGE TEST: BATCH %05d / %05d | LOSS %.4f" %
           (batch, num_batch_test, np.mean(loss_arr)))

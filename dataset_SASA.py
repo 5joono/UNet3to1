@@ -38,7 +38,6 @@ class Dataset(torch.utils.data.Dataset):
         input = np.load(os.path.join(self.dir_data, self.lst_input[index]))
         input_next = np.load(os.path.join(self.dir_data, self.lst_input[index_next]))
         name = self.lst_input[index][6:14]
-        label = label[:,:,np.newaxis]
         input_prev = input_prev[:,:,np.newaxis]
         input = input[:,:,np.newaxis]
         input_next = input_next[:,:,np.newaxis]
@@ -64,16 +63,16 @@ class ToTensor(object):
         return data
 
 class Normalization(object):
-    def __init__(self, mean, std):
-        self.mean = mean
-        self.std = std
+    def __init__(self, min, max):
+        self.min = min
+        self.max = max
 
     def __call__(self, data):
         name, label, input, input_prev, input_next = data['name'], data['label'], data['input'], data['input_prev'], data['input_next']
 
-        input = (input - self.mean) / self.std
-        input_prev = (input_prev - self.mean) / self.std
-        input_next = (input_next - self.mean) / self.std
+        input = (input - self.min) / (self.max - self.min)
+        input_prev = (input_prev - self.min) / (self.max - self.min)
+        input_next = (input_next - self.min) / (self.max - self.min)
 
         data = {'name': name, 'label': label, 'input': input, 'input_prev': input_prev, 'input_next': input_next}
 
